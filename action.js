@@ -15,7 +15,10 @@ class Paper {
   rotating = false;
 
   init(paper) {
-    // ====== DI CHUYỂN CHUỘT + CẢM ỨNG ======
+    const updateTransform = () => {
+      paper.style.transform = `translateX(${this.currentPaperX}px) translateY(${this.currentPaperY}px) rotateZ(${this.rotation}deg)`;
+    };
+
     const handleMove = (clientX, clientY) => {
       if (!this.rotating) {
         this.mouseX = clientX;
@@ -44,50 +47,53 @@ class Paper {
         }
         this.prevMouseX = this.mouseX;
         this.prevMouseY = this.mouseY;
-        paper.style.transform = `translateX(${this.currentPaperX}px) translateY(${this.currentPaperY}px) rotateZ(${this.rotation}deg)`;
+        updateTransform();
       }
     };
 
-    // PC: chuột di chuyển
-    document.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
-    // Mobile: cảm ứng di chuyển
+    document.addEventListener('mousemove', (e) => {
+      handleMove(e.clientX, e.clientY);
+    });
+
     document.addEventListener('touchmove', (e) => {
+      if (e.cancelable) e.preventDefault(); // CHẶN CUỘN
       handleMove(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: false });
 
-    // ====== BẮT ĐẦU CHUỘT ======
     paper.addEventListener('mousedown', (e) => {
       if (this.holdingPaper) return;
       this.holdingPaper = true;
       paper.style.zIndex = highestZ++;
       if (e.button === 0) {
-        this.mouseTouchX = e.clientX;
-        this.mouseTouchY = e.clientY;
-        this.prevMouseX = this.mouseX = e.clientX;
-        this.prevMouseY = this.mouseY = e.clientY;
+        this.mouseTouchX = this.mouseX = e.clientX;
+        this.mouseTouchY = this.mouseY = e.clientY;
+        this.prevMouseX = this.mouseX;
+        this.prevMouseY = this.mouseY;
       }
       if (e.button === 2) {
         this.rotating = true;
       }
     });
 
-    // ====== BẮT ĐẦU CẢM ỨNG ======
     paper.addEventListener('touchstart', (e) => {
+      if (e.cancelable) e.preventDefault(); // CHẶN CUỘN
+
       if (this.holdingPaper) return;
       this.holdingPaper = true;
       paper.style.zIndex = highestZ++;
+
       const touch = e.touches[0];
-      this.mouseTouchX = touch.clientX;
-      this.mouseTouchY = touch.clientY;
-      this.prevMouseX = this.mouseX = touch.clientX;
-      this.prevMouseY = this.mouseY = touch.clientY;
+      this.mouseTouchX = this.mouseX = touch.clientX;
+      this.mouseTouchY = this.mouseY = touch.clientY;
+      this.prevMouseX = this.mouseX;
+      this.prevMouseY = this.mouseY;
     }, { passive: false });
 
-    // ====== KẾT THÚC (CHUỘT + CẢM ỨNG) ======
     window.addEventListener('mouseup', () => {
       this.holdingPaper = false;
       this.rotating = false;
     });
+
     window.addEventListener('touchend', () => {
       this.holdingPaper = false;
       this.rotating = false;
@@ -95,7 +101,6 @@ class Paper {
   }
 }
 
-// Áp dụng cho tất cả .paper
 const papers = Array.from(document.querySelectorAll('.paper'));
 papers.forEach(paper => {
   const p = new Paper();
